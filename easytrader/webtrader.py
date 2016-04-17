@@ -49,15 +49,20 @@ class WebTrader(object):
 
     def prepare(self, need_data):
         """登录的统一接口
-        :param need_data 登录所需数据"""
+        :param need_data 登录所需数据
+        """
         self.read_config(need_data)
         self.autologin()
 
-    def autologin(self):
-        """实现自动登录"""
-        is_login_ok = self.login()
-        if not is_login_ok:
-            self.autologin()
+    def autologin(self, limit=10):
+        """实现自动登录
+        :param limit: 登录次数限制
+        """
+        for _ in range(limit):
+            if self.login():
+                break
+        else:
+            raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
         self.keepalive()
 
     def login(self):
