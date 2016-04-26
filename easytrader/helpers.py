@@ -76,7 +76,7 @@ def get_stock_type(stock_code):
 def recognize_verify_code(image_path, broker='ht'):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
     :param image_path: 图片路径
-    :param broker: 券商 ['ht', 'yjb', 'gf']
+    :param broker: 券商 ['ht', 'yjb', 'gf', 'yh']
     :return recognized: verify code string"""
     if broker in ['ht', 'yjb']:
         if broker == 'ht':
@@ -111,6 +111,8 @@ def recognize_verify_code(image_path, broker='ht'):
             return out_put[verify_code_start:]
     elif broker == 'gf':
         return detect_gf_result(image_path)
+    elif broker == 'yh':
+        return detect_yh_result(image_path)
     # 调用 tesseract 识别
     # ubuntu 15.10 无法识别的手动 export TESSDATA_PREFIX
     system_result = os.system('tesseract "{}" result -psm 7'.format(image_path))
@@ -157,6 +159,19 @@ def detect_gf_result(image_path):
         med_res = med_res.filter(ImageFilter.MedianFilter)
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
+
+
+def detect_yh_result(image_path):
+    from PIL import Image
+    import pytesseract
+    img = Image.open(image_path)
+    for x in range(img.width):
+        for y in range(img.height):
+            (r, g, b) = img.getpixel((x, y))
+            if r > 100 and g > 100 and b > 100:
+                img.putpixel((x, y), (256, 256, 256))
+    res = pytesseract.image_to_string(img)
+    return res
 
 
 def get_mac():

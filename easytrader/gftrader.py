@@ -4,12 +4,11 @@ from __future__ import division
 import json
 import os
 import re
-import urllib
 import tempfile
+import urllib
 
 import requests
 import six
-
 
 from . import helpers
 from .webtrader import WebTrader
@@ -65,7 +64,6 @@ class GFTrader(WebTrader):
     def login(self, throw=False):
         """实现广发证券的自动登录"""
         self.__go_login_page()
-
         verify_code = self.__handle_recognize_code()
 
         if not verify_code:
