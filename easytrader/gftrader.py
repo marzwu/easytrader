@@ -34,6 +34,12 @@ class GFTrader(WebTrader):
         self.sessionid = ''
         self.holdername = list()
 
+    def _prepare_account(self, user, password, **kwargs):
+        self.account_config = {
+            'username': user,
+            'password': password
+        }
+
     def __handle_recognize_code(self):
         """获取并识别返回的验证码
         :return:失败返回 False 成功返回 验证码"""
@@ -387,7 +393,7 @@ class GFTrader(WebTrader):
             other,
             stock_account=need_info['stock_account'],
             exchange_type=need_info['exchange_type'],
-            stock_code=stock_code,
+            stock_code=stock_code[-6:],
             entrust_price=price,
             dse_sessionId=self.sessionid
         )
