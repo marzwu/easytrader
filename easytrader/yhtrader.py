@@ -2,6 +2,7 @@
 from __future__ import division, unicode_literals
 
 import math
+import logging
 import os
 import random
 import re
@@ -31,8 +32,8 @@ def slice_list(step=None, num=None, data_list=None):
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
 
-    def __init__(self):
-        super(YHTrader, self).__init__()
+    def __init__(self, debug=True):
+        super(YHTrader, self).__init__(debug=debug)
         self.cookie = None
         self.account_config = None
         self.s = None
@@ -293,7 +294,7 @@ class YHTrader(WebTrader):
         params = dict(
             self.config['buy'],
             bsflag=bsflag,
-            qty=amount if amount else volume // price // 100 * 100
+            qty=int(amount) if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -491,8 +492,10 @@ class YHTrader(WebTrader):
         return self.format_response_data_type(res)
 
     def check_account_live(self, response):
-        if hasattr(response, 'get') and response.get('error_no') == '-1':
-            self.heart_active = False
+        if hasattr(response, 'get'):
+            if response.get('error_no') == '-1' or response.get('result_type') == 'error':
+                self.heart_active = False
+                raise NotLoginError(response.get('result_msg'))
 
     def heartbeat(self):
         heartbeat_params = dict(
