@@ -2,6 +2,7 @@
 
 import unittest
 from datetime import datetime
+import time
 
 import easytrader
 from easytrader import JoinQuantFollower
@@ -101,6 +102,19 @@ class TestEasytrader(unittest.TestCase):
         normal_data = 1023.05
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
+
+    def test_gf_check_account_live(self):
+        user = easytrader.use('gf')
+
+        test_data = None
+        user.check_account_live(test_data)
+        time.sleep(35)
+        self.assertTrue(user.heart_active)
+
+        test_data = {'success': False, 'data': [{}], 'total': 1}
+        user.check_account_live(test_data)
+        time.sleep(35)
+        self.assertTrue(user.heart_active)
 
 
 class TestXueQiuTrader(unittest.TestCase):
