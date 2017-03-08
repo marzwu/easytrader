@@ -26,6 +26,7 @@
 * 银河
 * 广发
 * 银河客户端(支持自动登陆), 须在 `windows` 平台下载 `银河双子星` 客户端
+* 湘财证券
 * 佣金宝(web已经关闭)
 
 ### 模拟交易
@@ -91,6 +92,13 @@ user = easytrader.use('yh_client') # 银河客户端支持 ['yh_client', 'YH_CLI
 user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
 ```
 
+##### 湘财证券
+
+```python
+user = easytrader.use('xczq') # 湘财证券支持 ['xczq', '湘财证券']
+```
+
+
 
 #### 登录帐号
 
@@ -102,7 +110,7 @@ user.prepare('/path/to/your/ht.json') // 或者 yh.json 或者 yh_client.json �
 
 ##### 参数登录
 ```
-user.prepare(user='用户名', password='券商加密后的密码, 雪球、银河客户端为明文密码')
+user.prepare(user='用户名', password='银河，广发web端需要券商加密后的密码, 雪球、银河客户端为明文密码')
 ```
 
 **注**:
@@ -113,6 +121,7 @@ user.prepare(user='用户名', password='券商加密后的密码, 雪球、银�
 格式可以参照 `Github` 目录下对应的 `json` 文件
 
 * 银河类似下面文章中所说的方法。 通过在 `web` 手动登陆后等待一段时间出现锁屏, 然后需要输入密码解锁，银河的加密密码可以通过这个解锁锁屏的请求抓取到
+* [银河web获取加密密码的图文教程](https://shimo.im/doc/kvazIHNTRvYr7iqe)(需要安装 fildder 软件)
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 * 银河客户端直接使用明文的账号和密码即可
 
@@ -473,6 +482,12 @@ follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], tot
 
 ```
 follower.follow(***, entrust_prop='market')
+```
+
+#### 调整下单间隔, 默认为0s。调大可防止卖出买入时卖出单没有及时成交导致的买入金额不足
+
+```
+follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 ```
 
 
