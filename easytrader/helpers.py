@@ -175,7 +175,7 @@ def detect_yh_result(image_path):
         try:
             rep = requests.post(api, files={
                 'image': f
-            })
+            }, timeout=5)
             if rep.status_code != 200:
                 raise Exception('request {} error'.format(api))
         except Exception as e:
