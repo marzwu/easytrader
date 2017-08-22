@@ -1,6 +1,6 @@
 # coding:utf8
 from __future__ import division
-
+import sys
 import os
 import subprocess
 import tempfile
@@ -20,11 +20,20 @@ from . import helpers
 from .log import log
 
 
-class YHClientTrader():
+def findWindowSubwindowEqualText(tt):
+    hwnds = []
+    def findSub(hwnd,param):
+        if win32gui.FindWindowEx(hwnd,0,None,tt)!=0:
+            param.append(hwnd)
+    win32gui.EnumWindows(findSub,  hwnds)
+    return hwnds
+
+class GJClientTrader():
     def __init__(self):
+        self.LoginTitle = ['用户登录']
         self.Title = '网上股票交易系统5.0'
 
-    def prepare(self, config_path=None, user=None, password=None, exe_path='C:\中国银河证券双子星3.2\Binarystar.exe'):
+    def prepare(self, config_path=None, user=None, password=None, exe_path='C:\\全能行证券交易终端\\xiadan.exe'):
         """
         登陆银河客户端
         :param config_path: 银河登陆配置文件，跟参数登陆方式二选一
@@ -58,14 +67,16 @@ class YHClientTrader():
         log.info('成功检测到客户端登陆窗口')
 
         # 登陆
-        self._set_trade_mode()
+        # self._set_trade_mode()
         self._set_login_name(user)
         self._set_login_password(password)
         for _ in range(10):
             self._set_login_verify_code()
             self._click_login_button()
             time.sleep(3)
+            self._check_verify_code_wrong()
             if not self._has_login_window():
+                log.info('no login window, login success')
                 break
             self._click_login_verify_code()
 
@@ -82,7 +93,7 @@ class YHClientTrader():
         verify_code_image = self._grab_verify_code()
         image_path = tempfile.mktemp() + '.jpg'
         verify_code_image.save(image_path)
-        result = helpers.recognize_verify_code(image_path, 'yh_client')
+        result = helpers.recognize_verify_code(image_path, 'gj_client')
         time.sleep(0.2)
         self._input_login_verify_code(result)
         time.sleep(0.4)
@@ -93,27 +104,27 @@ class YHClientTrader():
 
     def _set_login_name(self, user):
         time.sleep(0.5)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5523)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3F3)
         win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, user)
 
     def _set_login_password(self, password):
         time.sleep(0.5)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5534)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3F4)
         win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, password)
 
     def _has_login_window(self):
-        for title in [' - 北京电信', ' - 北京电信 - 北京电信', ' - 北京联通1']:
+        for title in self.LoginTitle:
             self.login_hwnd = win32gui.FindWindow(None, title)
             if self.login_hwnd != 0:
                 return True
         return False
 
     def _input_login_verify_code(self, code):
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56b9)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3eb)
         win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, code)
 
     def _click_login_verify_code(self):
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5db)
         rect = win32gui.GetWindowRect(input_hwnd)
         self._mouse_click(rect[0] + 5, rect[1] + 5)
 
@@ -125,8 +136,20 @@ class YHClientTrader():
 
     def _click_login_button(self):
         time.sleep(1)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x1)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3ee)
         win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
+
+    def _check_verify_code_wrong(self):
+        hwnds = findWindowSubwindowEqualText("提示")
+        if len(hwnds)==0:
+            log.info('Right verify code')
+        elif len(hwnds)==1:
+            win32gui.SetForegroundWindow(hwnds[0])
+            button = win32gui.FindWindowEx(hwnds[0],0,None,"确定")        
+            win32gui.SendMessage(button, win32con.BM_CLICK, None, None)
+            log.info('Wrong verify code')
+        else:
+            raise Exception("_check_verify_code_wrong too many windows %d"%len(hwnds))
 
     def _has_main_window(self):
         try:
@@ -136,7 +159,7 @@ class YHClientTrader():
         return True
 
     def _grab_verify_code(self):
-        verify_code_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
+        verify_code_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5db)
         self._set_foreground_window(self.login_hwnd)
         time.sleep(1)
         rect = win32gui.GetWindowRect(verify_code_hwnd)
